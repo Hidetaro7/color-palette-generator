@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Color Palette Generator</title>
+  </head>
+  <body>
+    <h1>Color Palette Generator</h1>
+    <label for="base-color-input">Base Color:</label>
+    <input
+      type="color"
+      id="base-color-input"
+      value="#FF002E"
+      placeholder="#FF002E"
+    />
+    <button id="generate-button">Generate Palette</button>
+    <div id="color-palette"></div>
+
+    <script>
+      function generateColorPalette(baseColor) {
+        // 入力されたカラーコードを正規化
+        const normalizedBaseColor = normalizeColorCode(baseColor);
+
+        // ベースカラーをRGBに変換
+        const { r, g, b } = hexToRgb(normalizedBaseColor);
+
+        // カラーパレットを生成
+        const colorPalette = [];
+
+        // ベースカラーよりも暗いパターン
+        for (let i = 1; i <= 3; i++) {
+          const shade = i / 4; // 濃度を0～1の範囲で計算
+          const rShaded = Math.round(r * (1 - shade));
+          const gShaded = Math.round(g * (1 - shade));
+          const bShaded = Math.round(b * (1 - shade));
+          const colorCode = rgbToHex(rShaded, gShaded, bShaded);
+          const hsl = rgbToHSL(rShaded, gShaded, bShaded);
+          const colorData = {
+            hex: colorCode,
+            rgb: `rgb(${rShaded}, ${gShaded}, ${bShaded})`,
+            hsl: `hsl(${hsl.h}, ${hsl.s}%, ${hsl.l}%)`,
+          };
+          //console.log(colorData);
+          colorPalette.unshift(colorData); // 配列の先頭に追加
+        }
+
+        const hsl = rgbToHSL(r, g, b);
+        const colorData = {
+          hex: normalizedBaseColor,
+          rgb: `rgb(${r}, ${g}, ${b})`,
+          hsl: `hsl(${hsl.h}, ${hsl.s}%, ${hsl.l}%)`,
+        };
+        colorPalette.push(colorData); // ベースカラーを配列に追加
+
+        // ベースカーよりも明るいパターン
+        for (let i = 1; i <= 7; i++) {
+          const shade = easeInSine(i / 8); // 濃度を0～1の範囲で計算
+          const rShaded = Math.round(r + (255 - r) * shade);
+          const gShaded = Math.round(g + (255 - g) * shade);
+          const bShaded = Math.round(b + (255 - b) * shade);
+          const colorCode = rgbToHex(rShaded, gShaded, bShaded);
+          const hsl = rgbToHSL(rShaded, gShaded, bShaded);
+          const colorData = {
+            hex: colorCode,
+            rgb: `rgb(${rShaded}, ${gShaded}, ${bShaded})`,
+            hsl: `hsl(${hsl.h}, ${hsl.s}%, ${hsl.l}%)`,
+          };
+          colorPalette.push(colorData); // 配列の末尾に追加
+        }
+
+        return colorPalette.reverse();
+      }
+
+      function normalizeColorCode(colorCode) {
+        // 先頭の#を除去
+        if (colorCode.startsWith('#')) {
+          colorCode = colorCode.slice(1);
+        }
+
+        // カラーコードが3桁の場合は6桁に変換
+        if (colorCode.length === 3) {
+          colorCode = colorCode
+            .split('')
+            .map((c) => c + c)
+            .join('');
+        }
+
+        // カラーコードが6桁以外の場合はエラーを投げる
+        if (colorCode.length !== 6) {
+          throw new Error('Invalid color code.');
+        }
+
+        return '#' + colorCode;
+      }
+
+      function hexToRgb(hexColor) {
+        const r = parseInt(hexColor.slice(1, 3), 16);
+        const g = parseInt(hexColor.slice(3, 5), 16);
+        const b = parseInt(hexColor.slice(5, 7), 16);
+        return { r, g, b };
+      }
+      function rgbToHex(r, g, b) {
+        const componentToHex = (c) => {
+          const hex = c.toString(16);
+          return hex.length === 1 ? '0' + hex : hex;
+        };
+
+        return `#${componentToHex(r)}${componentToHex(g)}${componentToHex(b)}`;
+      }
+      function rgbToHSL(r, g, b) {
+        r /= 255;
+        g /= 255;
+        b /= 255;
+
+        const max = Math.max(r, g, b);
+        const min = Math.min(r, g, b);
+        let h,
+          s,
+          l = (max + min) / 2;
+
+        if (max == min) {
+          h = s = 0; // achromatic
+        } else {
+          const d = max - min;
+          s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+          switch (max) {
+            case r:
+              h = (g - b) / d + (g < b ? 6 : 0);
+              break;
+            case g:
+              h = (b - r) / d + 2;
+              break;
+            case b:
+              h = (r - g) / d + 4;
+              break;
+          }
+          h /= 6;
+        }
+        h = Math.round(h * 360);
+        s = Math.round(s * 100);
+        l = Math.round(l * 100);
+
+        return { h, s, l };
+      }
+
+      // 放物線関数
+      function easeOutQuad(t) {
+        return t * (2 - t);
+      }
+
+      // easeOutSine 関数を easeOutQuad 関数に書き換える
+      function easeOutSine(t) {
+        return 1 - easeOutQuad(1 - t);
+      }
+
+      // easeInSine 関数を easeOutQuad 関数に書き換える
+      function easeInSine(t) {
+        return easeOutQuad(t);
+      }
+
+      // easeInCirc関数
+      function easeInCirc(t) {
+        return 1 - Math.sqrt(1 - t * t);
+      }
+
+      // easeOutCirc関数
+      function easeOutCirc(t) {
+        return Math.sqrt(1 - (t - 1) * (t - 1));
+      }
+
+      const generateButton = document.getElementById('generate-button');
+      const colorPaletteElement = document.getElementById('color-palette');
+
+      generateButton.addEventListener('click', () => {
+        const baseColorInput = document.getElementById('base-color-input');
+        const baseColor = baseColorInput.value.trim();
+        try {
+          const colorPalette = generateColorPalette(baseColor);
+          const colorPaletteHtml = colorPalette
+            .map(
+              (color) =>
+                `<div style="background-color:${color.hsl};width:20px;height:20px;display:inline-block;"></div>`
+            )
+            .join('');
+          colorPaletteElement.innerHTML = colorPaletteHtml;
+        } catch (error) {
+          console.error(error);
+          colorPaletteElement.innerHTML =
+            '<p style="color:red">Invalid color code.</p>';
+        }
+      });
+    </script>
+  </body>
+</html>

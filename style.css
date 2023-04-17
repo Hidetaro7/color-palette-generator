@@ -1,0 +1,33 @@
+.color-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: 50px;
+}
+
+.base-color {
+  width: 150px;
+  height: 150px;
+  margin-bottom: 20px;
+}
+
+.color {
+  width: 100px;
+  height: 100px;
+  margin-right: 20px;
+}
+
+#generate-btn {
+  margin-top: 20px;
+  padding: 10px 20px;
+  font-size: 16px;
+  cursor: pointer;
+  border: none;
+  background-color: #007bff;
+  color: #fff;
+  border-radius: 5px;
+}
+
+#generate-btn:hover {
+  background-color: #0062cc;
+}
